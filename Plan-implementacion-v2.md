@@ -94,6 +94,165 @@ Clase `Recipe` con:
 
 ---
 
+## Entidades y atributos
+
+### 👤 Usuario
+
+| Atributo         | Tipo           | Restricción         | Descripción                        |
+|------------------|----------------|---------------------|------------------------------------|
+| id_usuario       | INT            | PK, AUTO_INCREMENT  | Identificador único                |
+| nombre           | VARCHAR(100)   | NOT NULL            | Nombre completo                    |
+| username         | VARCHAR(50)    | UNIQUE, NOT NULL    | Nombre de usuario                  |
+| email            | VARCHAR(150)   | UNIQUE, NOT NULL    | Correo electrónico                 |
+| password_hash    | VARCHAR(255)   | NOT NULL            | Contraseña encriptada              |
+| avatar_url       | VARCHAR(300)   | NULL                | URL de imagen de perfil            |
+| bio              | TEXT           | NULL                | Descripción del usuario            |
+| activo           | BOOLEAN        | DEFAULT TRUE        | Estado de la cuenta                |
+| fecha_registro   | DATETIME       | DEFAULT NOW()       | Fecha de creación de cuenta        |
+| rol              | ENUM           | DEFAULT 'usuario'   | usuario / editor / admin           |
+
+---
+
+### 🍽️ Receta
+
+| Atributo          | Tipo           | Restricción         | Descripción                        |
+|-------------------|----------------|---------------------|------------------------------------|
+| id_receta         | INT            | PK, AUTO_INCREMENT  | Identificador único                |
+| id_usuario        | INT            | FK → Usuario        | Autor de la receta                 |
+| id_categoria      | INT            | FK → Categoria      | Categoría principal                |
+| titulo            | VARCHAR(200)   | NOT NULL            | Nombre de la receta                |
+| descripcion       | TEXT           | NULL                | Descripción breve                  |
+| imagen_url        | VARCHAR(300)   | NULL                | Foto de portada                    |
+| tiempo_prep_min   | INT            | NULL                | Tiempo de preparación (minutos)    |
+| tiempo_coccion_min| INT            | NULL                | Tiempo de cocción (minutos)        |
+| porciones         | INT            | NOT NULL            | Número de porciones                |
+| dificultad        | ENUM           | NOT NULL            | facil / media / dificil            |
+| tipo_cocina       | VARCHAR(80)    | NULL                | Mexicana, Italiana, etc.           |
+| calorias_aprox    | INT            | NULL                | Calorías por porción               |
+| es_publica        | BOOLEAN        | DEFAULT TRUE        | Visibilidad de la receta           |
+| estado            | ENUM           | DEFAULT 'borrador'  | borrador / publicada / archivada   |
+| fecha_creacion    | DATETIME       | DEFAULT NOW()       | Fecha de publicación               |
+| fecha_actualizacion| DATETIME      | ON UPDATE NOW()     | Última modificación                |
+
+---
+
+### 🗂️ Categoria
+
+| Atributo      | Tipo         | Restricción        | Descripción                         |
+|---------------|--------------|--------------------|-------------------------------------|
+| id_categoria  | INT          | PK, AUTO_INCREMENT | Identificador único                 |
+| nombre        | VARCHAR(100) | UNIQUE, NOT NULL   | Nombre de la categoría              |
+| descripcion   | TEXT         | NULL               | Detalle de la categoría             |
+| icono_url     | VARCHAR(300) | NULL               | Ícono representativo                |
+| activa        | BOOLEAN      | DEFAULT TRUE       | Estado de la categoría              |
+
+> **Ejemplos:** Desayunos, Sopas, Postres, Bebidas, Ensaladas, Carnes, Vegano, Sin gluten
+
+---
+
+### 🥕 Ingrediente
+
+| Atributo        | Tipo         | Restricción        | Descripción                         |
+|-----------------|--------------|--------------------|-------------------------------------|
+| id_ingrediente  | INT          | PK, AUTO_INCREMENT | Identificador único                 |
+| nombre          | VARCHAR(150) | UNIQUE, NOT NULL   | Nombre del ingrediente              |
+| descripcion     | TEXT         | NULL               | Notas o sustituciones               |
+| calorias_por_100g| DECIMAL(6,2)| NULL               | Información nutricional             |
+| imagen_url      | VARCHAR(300) | NULL               | Foto del ingrediente                |
+| activo          | BOOLEAN      | DEFAULT TRUE       | Disponibilidad en el catálogo       |
+
+---
+
+### 🔗 RecetaIngrediente *(tabla pivote)*
+
+| Atributo        | Tipo          | Restricción              | Descripción                       |
+|-----------------|---------------|--------------------------|-----------------------------------|
+| id              | INT           | PK, AUTO_INCREMENT       | Identificador único               |
+| id_receta       | INT           | FK → Receta              | Receta a la que pertenece         |
+| id_ingrediente  | INT           | FK → Ingrediente         | Ingrediente utilizado             |
+| id_unidad       | INT           | FK → UnidadMedida        | Unidad de medida                  |
+| cantidad        | DECIMAL(8,3)  | NOT NULL                 | Cantidad necesaria                |
+| notas           | VARCHAR(200)  | NULL                     | Ej: "picado fino", "al gusto"     |
+| es_opcional     | BOOLEAN       | DEFAULT FALSE            | Si el ingrediente es opcional     |
+| orden           | INT           | DEFAULT 0                | Orden en la lista de ingredientes |
+
+---
+
+### 👣 PasoReceta
+
+| Atributo        | Tipo          | Restricción        | Descripción                         |
+|-----------------|---------------|--------------------|-------------------------------------|
+| id_paso         | INT           | PK, AUTO_INCREMENT | Identificador único                 |
+| id_receta       | INT           | FK → Receta        | Receta a la que pertenece           |
+| numero_paso     | INT           | NOT NULL           | Orden del paso (1, 2, 3…)           |
+| instruccion     | TEXT          | NOT NULL           | Descripción del paso                |
+| imagen_url      | VARCHAR(300)  | NULL               | Foto ilustrativa del paso           |
+| duracion_min    | INT           | NULL               | Tiempo estimado del paso            |
+| consejo         | VARCHAR(300)  | NULL               | Tip adicional del chef              |
+
+---
+
+### 🏷️ Etiqueta
+
+| Atributo     | Tipo         | Restricción        | Descripción                          |
+|--------------|--------------|--------------------|--------------------------------------|
+| id_etiqueta  | INT          | PK, AUTO_INCREMENT | Identificador único                  |
+| nombre       | VARCHAR(80)  | UNIQUE, NOT NULL   | Nombre de la etiqueta                |
+| color_hex    | CHAR(7)      | NULL               | Color para UI (ej: `#FF5733`)        |
+
+> **Ejemplos:** #rápido, #5ingredientes, #sinlactosa, #navidad, #picante, #niños
+
+---
+
+### 🔗 RecetaEtiqueta *(tabla pivote)*
+
+| Atributo    | Tipo | Restricción        | Descripción                     |
+|-------------|------|--------------------|----------------------------------|
+| id_receta   | INT  | FK → Receta        | Receta etiquetada               |
+| id_etiqueta | INT  | FK → Etiqueta      | Etiqueta aplicada               |
+
+> **PK compuesta:** (id_receta, id_etiqueta)
+
+---
+
+### 💬 Comentario
+
+| Atributo        | Tipo         | Restricción        | Descripción                         |
+|-----------------|--------------|--------------------|-------------------------------------|
+| id_comentario   | INT          | PK, AUTO_INCREMENT | Identificador único                 |
+| id_receta       | INT          | FK → Receta        | Receta comentada                    |
+| id_usuario      | INT          | FK → Usuario       | Autor del comentario                |
+| id_padre        | INT          | FK → Comentario    | NULL = comentario raíz, o respuesta |
+| contenido       | TEXT         | NOT NULL           | Texto del comentario                |
+| calificacion    | TINYINT      | NULL (1–5)         | Estrellas (solo comentarios raíz)   |
+| fecha           | DATETIME     | DEFAULT NOW()      | Fecha y hora                        |
+| editado         | BOOLEAN      | DEFAULT FALSE      | Si fue modificado                   |
+
+---
+
+### ❤️ Favorito
+
+| Atributo   | Tipo     | Restricción        | Descripción                     |
+|------------|----------|--------------------|---------------------------------|
+| id_usuario | INT      | FK → Usuario       | Usuario que guarda              |
+| id_receta  | INT      | FK → Receta        | Receta guardada                 |
+| fecha      | DATETIME | DEFAULT NOW()      | Fecha en que se marcó favorito  |
+
+> **PK compuesta:** (id_usuario, id_receta)
+
+---
+
+### 📐 UnidadMedida
+
+| Atributo    | Tipo        | Restricción        | Descripción                          |
+|-------------|-------------|--------------------|--------------------------------------|
+| id_unidad   | INT         | PK, AUTO_INCREMENT | Identificador único                  |
+| nombre      | VARCHAR(50) | UNIQUE, NOT NULL   | Nombre completo (ej: "kilogramo")    |
+| abreviatura | VARCHAR(15) | UNIQUE, NOT NULL   | Abreviatura (ej: "kg", "tza", "pza") |
+| tipo        | ENUM        | NOT NULL           | peso / volumen / pieza / otro        |
+
+---
+
 ## 3. Servicios
 
 ### `lib/services/preferences_service.dart`
